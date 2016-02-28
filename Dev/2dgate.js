@@ -1,7 +1,7 @@
 var $2dgate = {
 	FanHuaJi : function(text , to , callback){
-		$.get("https://sctctw.2d-gate.org/api.php?text="+text+"&to="+to,function(data){
-			callback($.parseJSON(data.query.results.html.body));
+		$.getJSON(YQL("https://sctctw.2d-gate.org/api.php?text="+text+"&to="+to,"//body"),function(data){
+			callback($.parseJSON(data.query.results.body));
 		});
 	},
 	Anime : {
@@ -9,13 +9,17 @@ var $2dgate = {
 		list : function(type , callback){
 			var listType = this.listType[type];
 			if (typeof listType !== 'undefined') {
-				$.get("http://2d-gate.org/forum-78-1.html",function(data){
-					callback(data.query.results.html.body.div[4].div.div.div.div.div[3].div.div.div[0].div[1].div[1].div.table.tbody.tr[listType].td.div);
+				$.getJSON(YQL("http://2d-gate.org/forum-78-1.html","//table[@id='olAL']/tbody/tr["+listType+1+"]"),function(data){
+					callback(data.query.results.tr);
 				});
 			}
-		},
-	}
+		}
+	},
 };
+var YQL = function(url , xpath){
+	xpath = xpath || "*" ;
+	return "//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select * from html where url="' + url + '" and xpath="'+ xpath +'"')+"&format=json&callback=";
+}
 
 
 
@@ -23,60 +27,3 @@ var $2dgate = {
 
 
 
-
-
-jQuery.ajax = (function(_ajax){
-    
-    var protocol = location.protocol,
-        hostname = location.hostname,
-        exRegex = RegExp(protocol + '//' + hostname),
-        YQL = '//query.yahooapis.com/v1/public/yql?callback=?',
-        query = 'select * from html where url="{URL}" and xpath="*"';
-    
-    function isExternal(url) {
-        return !exRegex.test(url) && /:\/\//.test(url);
-    }
-    
-    return function(o) {
-        
-        var url = o.url;
-        
-        if ( /get/i.test(o.type) && !/json/i.test(o.dataType) && isExternal(url) ) {
-            
-            // Manipulate options so that JSONP-x request is made to YQL
-            
-            o.url = YQL;
-            o.dataType = 'json';
-            
-            o.data = {
-                q: query.replace(
-                    '{URL}',
-                    url + (o.data ?
-                        (/\?/.test(url) ? '&' : '?') + jQuery.param(o.data)
-                    : '')
-                ),
-                format: 'json'
-            };
-            
-            // Since it's a JSONP request
-            // complete === success
-            if (!o.success && o.complete) {
-                o.success = o.complete;
-                delete o.complete;
-            }
-            
-            o.success = (function(_success){
-                return function(data) {                    
-                    if (_success) {
-                        _success.call(this,data, 'success');
-                    }              
-                };
-            })(o.success);
-            
-        }
-        
-        return _ajax.apply(this, arguments);
-        
-    };
-    
-})(jQuery.ajax);
