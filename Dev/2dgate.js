@@ -1,23 +1,68 @@
+function callback(){
+	alert("callbakc");
+}
 var $2dgate = {
+	JSONP : {
+		get : function(url , callback){
+			$.ajaxSetup({
+				cache: true
+			});
+			$.getScript($2dgate.get(url)+"&callback=$2dgate.JSONP.finish",function(){
+				$.when($2dgate.JSONP.finished).done(function(data){
+				callback(data);
+				});
+			});
+		},
+		finish : function(data){
+			if($2dgate.Setup.Proxy){
+				this.finished.resolve(data.contents);
+			}else{
+				this.finished.resolve($.parseJSON(data.query.results.resources.content));
+				//this.finished.resolve(data.query.results.resources.content);
+			}
+		},
+		finished : $.Deferred()
+	},
+	get : function(url){
+		if(this.Setup.Proxy){
+			return this.Setup.Proxy + encodeURIComponent(url);
+		}else{
+			return "//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select content from data.headers where url="' + url+'"')+"&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=xml";	
+		}
+	},
+	Setup : {
+		//Proxy : ""
+		Proxy : "http://user.frdm.info/ckhung/i/ba-simple-proxy.php?url="
+	},
 	FanHuaJi : function(text , to , callback){
-		$.getJSON(YQL("https://sctctw.2d-gate.org/api.php?text="+text+"&to="+to,"//body"),function(data){
-			callback($.parseJSON(data.query.results.body));
+		$2dgate.JSONP.get("https://sctctw.2d-gate.org/api.php?text="+text+"&to="+to,function(data){
+			callback(data);
 		});
 	},
 	Anime : {
-		listType : {"星期一" : 0 ,	"星期二" : 1 ,	"星期三" : 2 ,	"星期四" : 3 ,	"星期五" : 4 ,	"星期六" : 5 ,	"星期日" : 6 ,	"不定期" : 7 ,	"劇場" : 8 , 	"@OVA" : 9 ,	"填坑" : 10 ,	"舊番區" : 11 ,	"大長篇" : 12},
-		list : function(type , callback){
-			var listType = this.listType[type];
-			if (typeof listType !== 'undefined') {
-				$.getJSON(YQL("http://2d-gate.org/forum-78-1.html","//table[@id='olAL']/tbody/tr["+listType+1+"]"),function(data){
-					callback(data.query.results.tr);
-				});
-			}
-		},
-		full : function(callback){
-			$.get(YQL_robot("http://anime.2d-gate.org/__cache.html"),function(data){
+		weeks : function(name , callback){
+			$2dgate.JSONP.get("http://2d-gate.org/forum-78-1.html",function(data){
 				var rows = [];
-				$.each($(data.query.results.resources.content).filter("table#animeList").children("tbody").children(), function(i , n){
+				$.each($(data.replace(/<(script|img)[^>]+?\/>|<(script|img)(.|\s)*?\/(script|img)>/gi, '')).find("table#olAL tbody").children(), function(i , n){
+					if ($(n).find("th:eq(0)").text() != name){
+						return true;
+					};
+					$.each($(n).find("td:eq(0)").children(), function(i , n){
+						var $row = $(n);
+						rows.push({
+							"標題" : $row.text(),
+							"連結" : $row.attr("href")
+						});	
+					});
+					return false;
+				});
+				callback(rows);
+			});
+		},
+		list : function(callback){
+			$2dgate.JSONP.get("http://anime.2d-gate.org/__cache.html",function(data){
+				var rows = [];
+				$.each($(data.replace(/<(script|img)[^>]+?\/>|<(script|img)(.|\s)*?\/(script|img)>/gi, '')).filter("table#animeList").children("tbody").children(), function(i , n){
 					var $row = $(n);
 					rows.push({
 						"標題" : $row.find('td:eq(6)').html(),
@@ -29,18 +74,11 @@ var $2dgate = {
 						"連結" :  $row.find('td:eq(0) a').attr('href')
 					});
 				});
-				return callback(rows);
+				return callback(rows);	
 			});
 		}
 	}
 };
-var YQL = function(url , xpath){
-	xpath = xpath || "*" ;
-	return "//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select * from html where url="' + url + '" and xpath="'+ xpath +'"')+"&format=json";
-}
-var YQL_robot = function(url){
-	return "//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select content from data.headers where url="' + url+'"')+"&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
-}
 
 
 
