@@ -1,29 +1,5 @@
 <html><head><meta charset="utf-8"><script src="./js/jquery-2.2.1.min.js" ></script><script src="2dgate.js" ></script><script>
-$2dgate.Anime.list("星期一",function(data){
-	$.each(data, function( i , val ) {
-		$("body").append(val.a.content+":"+val.a.href+"<br>");
-	});
+$2dgate.Anime.full(function(data){
+	$("<pre>"+JSON.stringify(data,null,2)+"</pre>").appendTo( "body" );
 });
-
-
-
-//$.get("http://2d-gate.org/forum-78-1.html",function(data){
-	//var a = $.parseJSON(data);
-	//console.log(data.query.results.html.body.div[4].div.div.div.div.div[3].div.div.div[0].div[1].div[1].div.table.tbody.tr[]);
-//});
-
 </script></head><body></body></html>
-<!-- 2dgate library
-code by j113203 { wtapss: +852 91738490 , j113203@gmail.com }
-
-//繁化姬
-	(JSON) $2dgate.FanHuaJi(text,to,callback);
-		text : 將要進行轉換的文字。UTF-8編碼。
-		to : 要進行何種轉換。合法的值有 "sc"(簡化), "tc"(繁化), "hk"(香港化), "tw"(台灣化), "nonsense"(廢文化)。
-	
-//動畫線上看 - 列表
-	$2dgate.Anime.list(type , callback);
-	
-		$2dgate.
-
--->
