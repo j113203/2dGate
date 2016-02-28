@@ -1,6 +1,5 @@
-function callback(){
-	alert("callbakc");
-}
+//	2dgate library
+//	code by j113203 { wtapss: +852 91738490 , j113203@gmail.com }
 var $2dgate = {
 	JSONP : {
 		get : function(url , callback){
@@ -9,7 +8,7 @@ var $2dgate = {
 			});
 			$.getScript($2dgate.get(url)+"&callback=$2dgate.JSONP.finish",function(){
 				$.when($2dgate.JSONP.finished).done(function(data){
-				callback(data);
+					callback(data);
 				});
 			});
 		},
@@ -17,8 +16,8 @@ var $2dgate = {
 			if($2dgate.Setup.Proxy){
 				this.finished.resolve(data.contents);
 			}else{
+				console.log(data);
 				this.finished.resolve($.parseJSON(data.query.results.resources.content));
-				//this.finished.resolve(data.query.results.resources.content);
 			}
 		},
 		finished : $.Deferred()
@@ -27,7 +26,7 @@ var $2dgate = {
 		if(this.Setup.Proxy){
 			return this.Setup.Proxy + encodeURIComponent(url);
 		}else{
-			return "//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select content from data.headers where url="' + url+'"')+"&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=xml";	
+			return "//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select content from data.headers where url="' + url+'"')+"&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json";	
 		}
 	},
 	Setup : {
@@ -79,10 +78,3 @@ var $2dgate = {
 		}
 	}
 };
-
-
-
-
-
-
-
