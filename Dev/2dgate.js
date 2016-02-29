@@ -16,8 +16,7 @@ var $2dgate = {
 			if($2dgate.Setup.Proxy){
 				this.finished.resolve(data.contents);
 			}else{
-				console.log(data);
-				this.finished.resolve($.parseJSON(data.query.results.resources.content));
+				this.finished.resolve(data.query.results.resources.content);
 			}
 		},
 		finished : $.Deferred()
@@ -35,7 +34,11 @@ var $2dgate = {
 	},
 	FanHuaJi : function(text , to , callback){
 		$2dgate.JSONP.get("https://sctctw.2d-gate.org/api.php?text="+text+"&to="+to,function(data){
-			callback(data);
+			if (typeof data === 'string') {
+				callback($.parseJSON(data));
+			}else{
+				callback(data);		
+			}
 		});
 	},
 	Anime : {
