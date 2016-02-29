@@ -6,6 +6,8 @@ var $2dgate = {
 			$.ajaxSetup({
 				cache: true
 			});
+			var JSONP_callback = "$2dgate.JSONP.finished_"+Math.floor(Math.random() * 1e10);
+			eval(JSONP_callback+" = $.Deferred()");
 			$.getScript($2dgate.Setup.Proxy+ encodeURIComponent(url) +"&callback=$2dgate.JSONP.finished.resolve" ).done(function( script, textStatus ) {
 				$.when($2dgate.JSONP.finished).done(function(data){
 					try {
@@ -15,8 +17,8 @@ var $2dgate = {
 					return callback(data);	
 				});
 			}).fail(function( jqxhr, settings, exception ) {
-				$.getScript("//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select content from data.headers where url="' + url+'"')+"&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json&callback=$2dgate.JSONP.finished.resolve" ).done(function( script, textStatus ) {
-					$.when($2dgate.JSONP.finished).done(function(data){
+				$.getScript("//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select content from data.headers where url="' + url+'"')+"&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json&callback="+JSONP_callback+".resolve" ).done(function( script, textStatus ) {
+					$.when($(JSONP_callback)).done(function(data){
 						try {
 							return callback(data.query.results.resources.content);
 						}catch(e){
