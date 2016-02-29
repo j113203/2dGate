@@ -8,9 +8,6 @@ var $2dgate = {
 			});
 			var JSONP_callback = Math.floor(Math.random() * 1e10);
 			$2dgate.JSONP.finished[JSONP_callback] = $.Deferred();
-			
-
-			//eval(JSONP_callback + " = $.Deferred()");
 			$.getScript($2dgate.Setup.Proxy+ encodeURIComponent(url) +"&callback=$2dgate.JSONP.finished["+ JSONP_callback + "].resolve").done(function( script, textStatus ) {
 				$.when($2dgate.JSONP.finished[JSONP_callback]).done(function(data){
 					$2dgate.JSONP.finished[JSONP_callback] = undefined;
@@ -21,8 +18,9 @@ var $2dgate = {
 					return callback(data);	
 				});
 			}).fail(function( jqxhr, settings, exception ) {
-				$.getScript("//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select content from data.headers where url="' + url+'"')+"&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json&callback="+JSONP_callback+".resolve" ).done(function( script, textStatus ) {
-					$.when($(JSONP_callback)).done(function(data){
+				$.getScript("//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select content from data.headers where url="' + url+'"')+"&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json&callback=$2dgate.JSONP.finished["+ JSONP_callback + "].resolve" ).done(function( script, textStatus ) {
+					$.when($2dgate.JSONP.finished[JSONP_callback]).done(function(data){
+						$2dgate.JSONP.finished[JSONP_callback] = undefined;
 						try {
 							return callback(data.query.results.resources.content);
 						}catch(e){
@@ -54,15 +52,18 @@ var $2dgate = {
 			$2dgate.JSONP.get("http://2d-gate.org/thread-"+url+"-1-1.html",function(data){
 				var rows = [];
 				data = $(data);
+				var video = {};
+				$.each(data.find("td.t_f div ul li"),function( i , v ){
+					video[$(v).text()] = data.find("td.t_f div div.gd_thumb:eq("+i+")").attr("onclick").match(/javascript:gdclick_2dg\(.*,'(.*?)',.*/)[1];
+				});	
 				rows.push({
 					"subject" : data.find("a#thread_subject").children().remove().end().text(),
 					"extra" : data.find("h1:eq(1)").text(),
-					"intro" : data.find("span.intro").text()
+					"intro" : data.find("span.intro").text(),
+					"staff" : data.find("div.highslide-maincontent").text(),
+					"video" : video
 				});
-				a = data;
-				//console.log(data);
 				return callback(rows);
-				//return callback(data.replace(/<(script|img)[^>]+?\/>|<(script|img)(.|\s)*?\/(script|img)>/gi, ''));
 			});
 		},
 		weeks : function(name , callback){
