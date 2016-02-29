@@ -6,10 +6,14 @@ var $2dgate = {
 			$.ajaxSetup({
 				cache: true
 			});
-			var JSONP_callback = "$2dgate.JSONP.finished_"+Math.floor(Math.random() * 1e10);
-			eval(JSONP_callback+" = $.Deferred()");
-			$.getScript($2dgate.Setup.Proxy+ encodeURIComponent(url) +"&callback=$2dgate.JSONP.finished.resolve" ).done(function( script, textStatus ) {
-				$.when($2dgate.JSONP.finished).done(function(data){
+			var JSONP_callback = Math.floor(Math.random() * 1e10);
+			$2dgate.JSONP.finished[JSONP_callback] = $.Deferred();
+			
+
+			//eval(JSONP_callback + " = $.Deferred()");
+			$.getScript($2dgate.Setup.Proxy+ encodeURIComponent(url) +"&callback=$2dgate.JSONP.finished["+ JSONP_callback + "].resolve").done(function( script, textStatus ) {
+				$.when($2dgate.JSONP.finished[JSONP_callback]).done(function(data){
+					$2dgate.JSONP.finished[JSONP_callback] = undefined;
 					try {
 						return callback(data.contents);
 					}catch(e){
@@ -30,7 +34,7 @@ var $2dgate = {
 				});	
 			});		
 		},
-		finished : $.Deferred()
+		finished : {}
 	},
 	Setup : {
 		//Proxy : ""
