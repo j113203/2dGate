@@ -79,5 +79,14 @@ var $2dgate = {
 				return callback(rows);	
 			});
 		}
+	},
+	thumbnail : function( src , width , height ){
+		if (width){
+			width = "&w=" + width;
+		}
+		if (height){
+			height ="&h=" + height;
+		}
+		return "http://thumbnail.2d-gate.org/?src=" + src + (width || "") + (height || "");
 	}
 };
