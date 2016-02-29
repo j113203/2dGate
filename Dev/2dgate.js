@@ -2,31 +2,33 @@
 //	code by j113203 { wtapss: +852 91738490 , j113203@gmail.com }
 var $2dgate = {
 	JSONP : {
-		get : function(url , callback){
+		get : function(url , callback , error_callback){
 			$.ajaxSetup({
 				cache: true
 			});
-			$.getScript($2dgate.get(url)+"&callback=$2dgate.JSONP.finish",function(){
+			$.getScript($2dgate.Setup.Proxy+ encodeURIComponent(url) +"&callback=$2dgate.JSONP.finished.resolve" ).done(function( script, textStatus ) {
 				$.when($2dgate.JSONP.finished).done(function(data){
-					callback(data);
+					try {
+						return callback(data.contents);
+					}catch(e){
+					};
+					return callback(data);	
 				});
-			});
-		},
-		finish : function(data){
-			if($2dgate.Setup.Proxy){
-				this.finished.resolve(data.contents);
-			}else{
-				this.finished.resolve(data.query.results.resources.content);
-			}
+			}).fail(function( jqxhr, settings, exception ) {
+				$.getScript("//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select content from data.headers where url="' + url+'"')+"&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json&callback=$2dgate.JSONP.finished.resolve" ).done(function( script, textStatus ) {
+					$.when($2dgate.JSONP.finished).done(function(data){
+						try {
+							return callback(data.query.results.resources.content);
+						}catch(e){
+						};
+						return callback(data);
+					});
+				}).fail(function( jqxhr, settings, exception ) {
+					return error_callback();
+				});	
+			});		
 		},
 		finished : $.Deferred()
-	},
-	get : function(url){
-		if(this.Setup.Proxy){
-			return this.Setup.Proxy + encodeURIComponent(url);
-		}else{
-			return "//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select content from data.headers where url="' + url+'"')+"&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json";	
-		}
 	},
 	Setup : {
 		//Proxy : ""
@@ -42,6 +44,21 @@ var $2dgate = {
 		});
 	},
 	Anime : {
+		tid : function(url,callback){
+			$2dgate.JSONP.get("http://2d-gate.org/thread-"+url+"-1-1.html",function(data){
+				var rows = [];
+				data = $(data);
+				rows.push({
+					"subject" : data.find("a#thread_subject").children().remove().end().text(),
+					"extra" : data.find("h1:eq(1)").text(),
+					"intro" : data.find("span.intro").text()
+				});
+				a = data;
+				//console.log(data);
+				return callback(rows);
+				//return callback(data.replace(/<(script|img)[^>]+?\/>|<(script|img)(.|\s)*?\/(script|img)>/gi, ''));
+			});
+		},
 		weeks : function(name , callback){
 			$2dgate.JSONP.get("http://2d-gate.org/forum-78-1.html",function(data){
 				var rows = [];
@@ -52,13 +69,13 @@ var $2dgate = {
 					$.each($(n).find("td:eq(0)").children(), function(i , n){
 						var $row = $(n);
 						rows.push({
-							"標題" : $row.text(),
-							"連結" : $row.attr("href")
+							"subject" : $row.text(),
+							"tid" : $row.attr("href").match(/thread-(.*?)-.*-.*\.html/)[1]
 						});	
 					});
 					return false;
 				});
-				callback(rows);
+				return callback(rows);
 			});
 		},
 		list : function(callback){
@@ -67,16 +84,25 @@ var $2dgate = {
 				$.each($(data.replace(/<(script|img)[^>]+?\/>|<(script|img)(.|\s)*?\/(script|img)>/gi, '')).filter("table#animeList").children("tbody").children(), function(i , n){
 					var $row = $(n);
 					rows.push({
-						"標題" : $row.find('td:eq(6)').html(),
-						"年份" : $row.find('td:eq(1)').text(),
-						"季節" : $row.find('td:eq(2)').text(),
-						"瀏覽數" : $row.find('td:eq(3)').text(),
-						"發表於" : $row.find('td:eq(4)').text(),
-						"更新於" : $row.find('td:eq(5)').text(),
-						"連結" :  $row.find('td:eq(0) a').attr('href')
+						"subject" : $row.find('td:eq(6)').html(),
+						"year" : $row.find('td:eq(1)').text(),
+						"season" : $row.find('td:eq(2)').text(),
+						"views" : $row.find('td:eq(3)').text(),
+						"dateline" : $row.find('td:eq(4)').text(),
+						"lastpost" : $row.find('td:eq(5)').text(),
+						"tid" :  $row.find('td:eq(0) a').attr('href').match(/thread-(.*?)-.*-.*\.html/)[1]
 					});
 				});
 				return callback(rows);	
+			});
+		},
+		list_ : function(callback){
+			$2dgate.JSONP.get("http://anime.2d-gate.org/?jsonOnly=1",function(data){
+				try {
+					return callback(data.json.threads);
+				}catch(e){
+				};
+				return callback($.parseJSON(data.split("\n").pop()).threads);
 			});
 		}
 	},
