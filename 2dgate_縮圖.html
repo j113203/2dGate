@@ -1,14 +1,14 @@
 <!-- 2dgate library
 code by j113203 { wtapss: +852 91738490 , j113203@gmail.com }
 
-//動畫線上看 - 全部列表
-	(JSON) $2dgate.Anime.list(callback);
-		
+//縮圖
+	(String) $2dgate.thumbnail(url,width,height);
+		url : 轉換圖片
+		width : 寬
+		height : 高
 		
 -->
 
 <html><head><meta charset="utf-8"><script src="//code.jquery.com/jquery-2.2.1.min.js" ></script><script src="2dgate.min.js" ></script><script>
-$2dgate.Anime.list(function(data){
-	$("<pre>"+JSON.stringify(data,null,2)+"</pre>").appendTo( "body" );
-});
+$("<img src='"+$2dgate.thumbnail("http://i.imgur.com/yPXPIit.png")+"'/>").appendTo("body");
 </script></head><body></body></html>
