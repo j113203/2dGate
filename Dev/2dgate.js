@@ -29,9 +29,8 @@ var $2dgate = {
 	},
 	Setup : {
 		//Proxy : ""
-		//Proxy : "http://user.frdm.info/ckhung/i/ba-simple-proxy.php?url="
+		Proxy : "http://user.frdm.info/ckhung/i/ba-simple-proxy.php?url="
 		//Proxy : "https://jsonp.afeld.me/?url="
-		Proxy : "http://benalman.com/code/projects/php-simple-proxy/ba-simple-proxy.php?url="
 	},
 	FanHuaJi : function(text , to , callback){
 		$2dgate.JSONP.get("https://sctctw.2d-gate.org/api.php?text="+text+"&to="+to,function(data){
