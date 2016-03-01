@@ -11,7 +11,6 @@ var $2dgate = {
 			$.getScript($2dgate.Setup.Proxy+ encodeURIComponent(url) +"&callback=$2dgate.JSONP.finished["+ JSONP_callback + "].resolve").done(function( script, textStatus ) {
 				$.when($2dgate.JSONP.finished[JSONP_callback]).done(function(data){
 					$2dgate.JSONP.finished[JSONP_callback] = undefined;
-						a = data;
 						return callback(data.contents || data.data || data[Object.keys(data)[0]] || data);
 				});
 			}).fail(function( jqxhr, settings, exception ) {
