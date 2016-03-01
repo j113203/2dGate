@@ -11,21 +11,14 @@ var $2dgate = {
 			$.getScript($2dgate.Setup.Proxy+ encodeURIComponent(url) +"&callback=$2dgate.JSONP.finished["+ JSONP_callback + "].resolve").done(function( script, textStatus ) {
 				$.when($2dgate.JSONP.finished[JSONP_callback]).done(function(data){
 					$2dgate.JSONP.finished[JSONP_callback] = undefined;
-					try {
-						return callback(data.contents);
-					}catch(e){
-					};
-					return callback(data);	
+						a = data;
+						return callback(data.contents || data.data || data[Object.keys(data)[0]] || data);
 				});
 			}).fail(function( jqxhr, settings, exception ) {
 				$.getScript("//query.yahooapis.com/v1/public/yql?q="+ encodeURIComponent('select content from data.headers where url="' + url+'"')+"&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json&callback=$2dgate.JSONP.finished["+ JSONP_callback + "].resolve" ).done(function( script, textStatus ) {
 					$.when($2dgate.JSONP.finished[JSONP_callback]).done(function(data){
 						$2dgate.JSONP.finished[JSONP_callback] = undefined;
-						try {
-							return callback(data.query.results.resources.content);
-						}catch(e){
-						};
-						return callback(data);
+						return callback(data.query.results.resources.content || data);
 					});
 				}).fail(function( jqxhr, settings, exception ) {
 					return error_callback();
@@ -36,7 +29,9 @@ var $2dgate = {
 	},
 	Setup : {
 		//Proxy : ""
-		Proxy : "http://user.frdm.info/ckhung/i/ba-simple-proxy.php?url="
+		//Proxy : "http://user.frdm.info/ckhung/i/ba-simple-proxy.php?url="
+		//Proxy : "https://jsonp.afeld.me/?url="
+		Proxy : "http://benalman.com/code/projects/php-simple-proxy/ba-simple-proxy.php?url="
 	},
 	FanHuaJi : function(text , to , callback){
 		$2dgate.JSONP.get("https://sctctw.2d-gate.org/api.php?text="+text+"&to="+to,function(data){
@@ -51,10 +46,23 @@ var $2dgate = {
 		tid : function(url,callback){
 			$2dgate.JSONP.get("http://2d-gate.org/thread-"+url+"-1-1.html",function(data){
 				var rows = [];
-				data = $(data);
+				data = $($.parseHTML(data,null,false));
+				a = data;
 				var video = {};
-				$.each(data.find("td.t_f div ul li"),function( i , v ){
-					video[$(v).text()] = data.find("td.t_f div div.gd_thumb:eq("+i+")").attr("onclick").match(/javascript:gdclick_2dg\(.*,'(.*?)',.*/)[1];
+				$.each(data.find("td.t_f ul a"),function( i , v ){
+					v = $(v);
+					var video_url = v.attr("href");
+					video_url = video_url.substring(video_url.lastIndexOf("#"));
+					var video_info = [];
+					video_url = (data.find("td.t_f div"+video_url+" div.gd_thumb").attr("onclick") || "" );
+					if (video_url){
+						video_url = video_url.match(/javascript:gdclick_2dg\(.*,'(.*?)',.*/)[1];
+					}
+					video_info.push({
+						"subject" : v.text(),
+						"id" : video_url
+					});
+					video[i] = video_info ;
 				});	
 				rows.push({
 					"subject" : data.find("a#thread_subject").children().remove().end().text(),
@@ -69,7 +77,7 @@ var $2dgate = {
 		weeks : function(name , callback){
 			$2dgate.JSONP.get("http://2d-gate.org/forum-78-1.html",function(data){
 				var rows = [];
-				$.each($(data.replace(/<(script|img)[^>]+?\/>|<(script|img)(.|\s)*?\/(script|img)>/gi, '')).find("table#olAL tbody").children(), function(i , n){
+				$.each($($.parseHTML(data,null,false)).find("table#olAL tbody").children(), function(i , n){
 					if ($(n).find("th:eq(0)").text() != name){
 						return true;
 					};
@@ -88,7 +96,7 @@ var $2dgate = {
 		list : function(callback){
 			$2dgate.JSONP.get("http://anime.2d-gate.org/__cache.html",function(data){
 				var rows = [];
-				$.each($(data.replace(/<(script|img)[^>]+?\/>|<(script|img)(.|\s)*?\/(script|img)>/gi, '')).filter("table#animeList").children("tbody").children(), function(i , n){
+				$.each($($.parseHTML(data,null,false)).filter("table#animeList").children("tbody").children(), function(i , n){
 					var $row = $(n);
 					rows.push({
 						"subject" : $row.find('td:eq(6)').html(),
@@ -105,11 +113,7 @@ var $2dgate = {
 		},
 		list_ : function(callback){
 			$2dgate.JSONP.get("http://anime.2d-gate.org/?jsonOnly=1",function(data){
-				try {
-					return callback(data.json.threads);
-				}catch(e){
-				};
-				return callback($.parseJSON(data.split("\n").pop()).threads);
+				return callback(data.json.threads || $.parseJSON(data.split("\n").pop()).threads);
 			});
 		}
 	},
